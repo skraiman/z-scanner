@@ -1,7 +1,16 @@
 #!/usr/bin/python3
+import re
 import tkinter as tk
 from tkinter import ttk
 import netifaces
+import subprocess
+from nbstreamreader import NonBlockingStreamReader as NBSR
+from nbstreamreader import UnexpectedEndOfStream
+
+
+proc = None
+nbsr = None
+listbox_data = None
 
 def get_ip_addresses():
     addr_list = []
@@ -21,17 +30,39 @@ def get_ip_addresses():
 
 def cb_callback(event):
     print(event)
-    print(v.get())
-    update_listbox(v.get())
+    iface = v.get()
+    print(iface)
+    update_listbox_ipaddr(iface)
+    if iface != "":
+        start_tcpdump(iface)
 
-def update_listbox(interface:str):
+def update_listbox_vlan(vlan):
+    if not vlan in listvar_data:
+        listvar.append(vlan)
+    listvar.set(list_box_data)
+
+
+def update_listbox_ipaddr(interface:str):
     if interface=="":
-        l=  [a + ": " + b for (a,b) in addr_list]
+        listbox_data=  [a + ": " + b for (a,b) in addr_list]
     else:
-        l = [a + ": " + b for (a, b) in addr_list if a == interface]
+        listbox_data = [a + ": " + b for (a, b) in addr_list if a == interface]
 
-    listvar.set(l)
-    print(listvar)
+    listvar.set(listbox_data)
+
+def start_tcpdump(iface):
+    global proc
+    global nbsr
+    if proc != None:
+        proc.kill()
+        proc = None
+        nbsr = None
+
+    proc = subprocess.Popen(['/usr/sbin/tcpdump', '-c', '10', '-i', iface, '-e', 'vlan'],
+                            stdout=subprocess.PIPE,
+                            #stderr=subprocess.PIPE
+                            )
+    nbsr = NBSR(proc.stdout)
 
 w = tk.Tk()
 w.title('CommunicationZ Scanner')
@@ -54,7 +85,7 @@ cb.bind("<<ComboboxSelected>>", cb_callback)
 
 addr_list = get_ip_addresses()
 listvar = tk.StringVar()
-update_listbox("")
+update_listbox_ipaddr("")
 listbox = tk.Listbox(w, listvariable = listvar, width=40)
 
 
@@ -62,4 +93,21 @@ listbox = tk.Listbox(w, listvariable = listvar, width=40)
 listbox.grid(column=0, row=2)
 #listbox.pack()
 
-w.mainloop()
+#w.mainloop()
+vlan_re = re.compile('^.* (vlan \d+),.*$')
+
+while True:
+    w.update_idletasks()
+    w.update()
+    if proc != None:
+        try:
+            line = nbsr.readline(0.1)
+            if line:
+                line = line.decode('ascii').rstrip()
+                print("line={}".format(line))
+                #m = vlan.re.search(line)
+                #update_listbox_vlan(m.group(1))
+        except UnexpectedEndOfStream:
+            pass
+
+    #
