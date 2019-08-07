@@ -1,16 +1,30 @@
 #!/usr/bin/python3
+# alternate-non-blocking-io
+import sys
+from threading import Thread
+from queue import Queue, Empty
+
 import re
 import tkinter as tk
 from tkinter import ttk
 import netifaces
 import subprocess
-from nbstreamreader import NonBlockingStreamReader as NBSR
-from nbstreamreader import UnexpectedEndOfStream
+
+
 
 
 proc = None
-nbsr = None
 listbox_data = None
+addr_list = None
+q = None
+ON_POSIX = 'posix' in sys.builtin_module_names
+
+
+def enqueue_output(out, queue):
+    for line in iter(out.readline, b''):
+        print(line)
+        queue.put(line)
+    out.close()
 
 def get_ip_addresses():
     addr_list = []
@@ -37,12 +51,14 @@ def cb_callback(event):
         start_tcpdump(iface)
 
 def update_listbox_vlan(vlan):
-    if not vlan in listvar_data:
-        listvar.append(vlan)
-    listvar.set(list_box_data)
+    global listbox_data
+    if not vlan in listbox_data:
+        listbox_data.append(vlan)
+        listvar.set(listbox_data)
 
 
 def update_listbox_ipaddr(interface:str):
+    global listbox_data
     if interface=="":
         listbox_data=  [a + ": " + b for (a,b) in addr_list]
     else:
@@ -52,17 +68,19 @@ def update_listbox_ipaddr(interface:str):
 
 def start_tcpdump(iface):
     global proc
-    global nbsr
+    global q
     if proc != None:
         proc.kill()
         proc = None
-        nbsr = None
 
-    proc = subprocess.Popen(['/usr/sbin/tcpdump', '-c', '10', '-i', iface, '-e', 'vlan'],
-                            stdout=subprocess.PIPE,
+    proc = subprocess.Popen(['/usr/sbin/tcpdump', '-i', iface, '-e', 'vlan'],
+                            stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, close_fds=ON_POSIX
                             #stderr=subprocess.PIPE
                             )
-    nbsr = NBSR(proc.stdout)
+    q = Queue()
+    t = Thread(target=enqueue_output, args=(proc.stdout, q))
+    t.daemon = True  # thread dies with the program
+    t.start()
 
 w = tk.Tk()
 w.title('CommunicationZ Scanner')
@@ -70,6 +88,8 @@ w.title('CommunicationZ Scanner')
 w.geometry("460x300")
 
 lbl = tk.Label(w, text="Interface").grid(column=0, row=0)
+
+listvar = tk.StringVar()
 
 
 ifaces = netifaces.interfaces()
@@ -84,7 +104,6 @@ cb.current(0)
 cb.bind("<<ComboboxSelected>>", cb_callback)
 
 addr_list = get_ip_addresses()
-listvar = tk.StringVar()
 update_listbox_ipaddr("")
 listbox = tk.Listbox(w, listvariable = listvar, width=40)
 
@@ -101,13 +120,13 @@ while True:
     w.update()
     if proc != None:
         try:
-            line = nbsr.readline(0.1)
+            line = q.get_nowait()  # or q.get(timeout=.1)
             if line:
-                line = line.decode('ascii').rstrip()
+                line = line.rstrip()
                 print("line={}".format(line))
-                #m = vlan.re.search(line)
-                #update_listbox_vlan(m.group(1))
-        except UnexpectedEndOfStream:
+                m = vlan_re.search(line)
+                update_listbox_vlan(m.group(1))
+        except Empty:
             pass
 
     #
