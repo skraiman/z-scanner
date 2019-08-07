@@ -4,12 +4,10 @@ import tkinter as tk
 from tkinter import ttk
 import netifaces
 import subprocess
-from nbstreamreader import NonBlockingStreamReader as NBSR
-from nbstreamreader import UnexpectedEndOfStream
+
 
 
 proc = None
-nbsr = None
 listbox_data = None
 
 def get_ip_addresses():
@@ -58,8 +56,8 @@ def start_tcpdump(iface):
         proc = None
         nbsr = None
 
-    proc = subprocess.Popen(['/usr/sbin/tcpdump', '-c', '10', '-i', iface, '-e', 'vlan'],
-                            stdout=subprocess.PIPE,
+    proc = subprocess.Popen(['/usr/sbin/tcpdump', '-i', iface, '-e', 'vlan'],
+                            stdout=subprocess.PIPE, bufsize=1, universal_newlines=True
                             #stderr=subprocess.PIPE
                             )
     nbsr = NBSR(proc.stdout)
@@ -103,10 +101,10 @@ while True:
         try:
             line = nbsr.readline(0.1)
             if line:
-                line = line.decode('ascii').rstrip()
+                line = line.rstrip()
                 print("line={}".format(line))
-                #m = vlan.re.search(line)
-                #update_listbox_vlan(m.group(1))
+                m = vlan.re.search(line)
+                update_listbox_vlan(m.group(1))
         except UnexpectedEndOfStream:
             pass
 
