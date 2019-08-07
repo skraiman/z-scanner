@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# alternate-non-blocking-io
 import re
 import tkinter as tk
 from tkinter import ttk
