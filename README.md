@@ -16,12 +16,7 @@ With Zscanner you can:
 * 3.5 inch OLED display and case.  I used this [display](https://www.amazon.com/gp/product/B07DWSQMKR/ref=ppx_yo_dt_b_asin_title_o01_s00?ie=UTF8&psc=1).  
 [This OLED display](https://www.amazon.com/Raspberry-320x480-Monitor-Raspbian-RetroPie/dp/B07N38B86S/ref=sr_1_1?keywords=for+Raspberry+Pi+3+B%2B+3.5+inch+Touch+Screen+with+Case%2C+320x480+Pixel+Monitor+TFT+LCD+Game+Display+%5BSupport+Raspbian%2C+Ubuntu%2C+Kali%2C+RetroPie+System%5D&qid=1565227362&s=electronics&sr=1-1) 
 and case looks a bit nicer as the case encloses the display.
-* Execute this command `sudo visudo` and modify section around root to look like this:
-```
-# User privilege specification
-root    ALL=(ALL:ALL) ALL
-pi      ALL=(root:root) /usr/sbin/tcpdump
-```
+* Execute this command to allow Zscanner to run tcpdump without entering the root password: ``` sudo chmod u+s /usr/sbin/tcpdump```
 
 ## Setup
 * Clone the repo
