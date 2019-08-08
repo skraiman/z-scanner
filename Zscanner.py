@@ -10,9 +10,6 @@ from tkinter import ttk
 import netifaces
 import subprocess
 
-
-
-
 proc = None
 listbox_data = None
 addr_list = None
@@ -25,8 +22,9 @@ def enqueue_output(out, queue):
         queue.put(line)
     out.close()
 
+
 def get_gateways():
-    gateway_list =[]
+    gateway_list = []
     gateways = netifaces.gateways()
     if 'default' in gateways:
         def_gw = gateways['default']
@@ -57,6 +55,7 @@ def cb_callback(event):
     if iface != "":
         start_tcpdump(iface)
 
+
 def lb_callback(event):
     w = event.widget
     index = int(w.curselection()[0])
@@ -70,25 +69,25 @@ def lb_callback(event):
 
 def update_listbox_vlan(vlan):
     global listbox_data
-    if not vlan in listbox_data:
+    if vlan not in listbox_data:
         listbox_data.append(vlan)
         listvar.set(listbox_data)
 
 
-
-def update_listbox_ipaddr(interface:str):
+def update_listbox_ipaddr(interface: str):
     global listbox_data
     global addr_list
     global gw_list
 
     addr_list = get_ip_addresses()
     gateway_list = get_gateways()
-    if interface=="":
-        listbox_data= [a + ": " + b for (a,b) in addr_list + gateway_list]
+    if interface == "":
+        listbox_data = [a + ": " + b for (a, b) in addr_list + gateway_list]
     else:
         listbox_data = [a + ": " + b for (a, b) in addr_list + gateway_list if a == interface]
 
     listvar.set(listbox_data)
+
 
 def start_tcpdump(iface):
     global proc
@@ -107,7 +106,7 @@ def start_tcpdump(iface):
     t.start()
 
 
-width=50
+width = 50
 w = tk.Tk()
 w.title('CommunicationZ Scanner')
 
@@ -117,11 +116,10 @@ lbl = tk.Label(w, text="Interface").grid(column=0, row=0)
 
 listvar = tk.StringVar()
 
-
 ifaces = netifaces.interfaces()
 ifaces.insert(0, "")
 
-v = tk.StringVar()#a string variable to hold user selection
+v = tk.StringVar()  # a string variable to hold user selection
 
 cb = ttk.Combobox(w, textvariable=v, values=ifaces, width=width)
 cb.grid(column=0, row=1)
@@ -129,16 +127,13 @@ cb.current(0)
 cb.bind("<<ComboboxSelected>>", cb_callback)
 
 update_listbox_ipaddr("")
-listbox = tk.Listbox(w, listvariable = listvar, width=width)
+listbox = tk.Listbox(w, listvariable=listvar, width=width)
 listbox.bind("<<ListboxSelect>>", lb_callback)
 
-
-
-
 listbox.grid(column=0, row=2)
-#listbox.pack()
+# listbox.pack()
 
-#w.mainloop()
+# w.mainloop()
 vlan_re = re.compile('^.* (vlan \d+),.*$')
 
 while True:
