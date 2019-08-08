@@ -57,6 +57,15 @@ def cb_callback(event):
     if iface != "":
         start_tcpdump(iface)
 
+def lb_callback(event):
+    w = event.widget
+    index = int(w.curselection()[0])
+    item = w.get(index)
+    iface = item.split(':')[0]
+    update_listbox_ipaddr(iface)
+    start_tcpdump(iface)
+
+
 def update_listbox_vlan(vlan):
     global listbox_data
     if not vlan in listbox_data:
@@ -67,6 +76,11 @@ def update_listbox_vlan(vlan):
 
 def update_listbox_ipaddr(interface:str):
     global listbox_data
+    global addr_list
+    global gw_list
+
+    addr_list = get_ip_addresses()
+    gateway_list = get_gateways()
     if interface=="":
         listbox_data= [a + ": " + b for (a,b) in addr_list + gateway_list]
     else:
@@ -110,10 +124,10 @@ cb.grid(column=0, row=1)
 cb.current(0)
 cb.bind("<<ComboboxSelected>>", cb_callback)
 
-addr_list = get_ip_addresses()
-gateway_list = get_gateways()
 update_listbox_ipaddr("")
 listbox = tk.Listbox(w, listvariable = listvar, width=40)
+listbox.bind("<<ListboxSelect>>", lb_callback)
+
 
 
 
