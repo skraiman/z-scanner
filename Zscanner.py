@@ -25,6 +25,16 @@ def enqueue_output(out, queue):
         queue.put(line)
     out.close()
 
+def get_gateways():
+    gateway_list =[]
+    gateways = netifaces.gateways()
+    if 'default' in gateways:
+        def_gw = gateways['default']
+        for (ip, _if) in def_gw.values():
+            gateway_list.append((_if, 'gw ' + ip))
+    return gateway_list
+
+
 def get_ip_addresses():
     addr_list = []
     interfaces = netifaces.interfaces()
@@ -54,12 +64,13 @@ def update_listbox_vlan(vlan):
         listvar.set(listbox_data)
 
 
+
 def update_listbox_ipaddr(interface:str):
     global listbox_data
     if interface=="":
-        listbox_data=  [a + ": " + b for (a,b) in addr_list]
+        listbox_data= [a + ": " + b for (a,b) in addr_list + gateway_list]
     else:
-        listbox_data = [a + ": " + b for (a, b) in addr_list if a == interface]
+        listbox_data = [a + ": " + b for (a, b) in addr_list + gateway_list if a == interface]
 
     listvar.set(listbox_data)
 
@@ -70,9 +81,9 @@ def start_tcpdump(iface):
         proc.kill()
         proc = None
 
-    proc = subprocess.Popen(['/usr/sbin/tcpdump', '-i', iface, '-e', 'vlan'],
-                            stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, close_fds=ON_POSIX
-                            #stderr=subprocess.PIPE
+    proc = subprocess.Popen(['/usr/sbin/tcpdump', '-n', '-l', '-i', iface, '-e', 'vlan'],
+                            stdout=subprocess.PIPE, universal_newlines=True, close_fds=ON_POSIX,
+                            bufsize=1,
                             )
     q = Queue()
     t = Thread(target=enqueue_output, args=(proc.stdout, q))
@@ -100,6 +111,7 @@ cb.current(0)
 cb.bind("<<ComboboxSelected>>", cb_callback)
 
 addr_list = get_ip_addresses()
+gateway_list = get_gateways()
 update_listbox_ipaddr("")
 listbox = tk.Listbox(w, listvariable = listvar, width=40)
 
