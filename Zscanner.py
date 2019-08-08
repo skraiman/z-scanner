@@ -22,7 +22,6 @@ ON_POSIX = 'posix' in sys.builtin_module_names
 
 def enqueue_output(out, queue):
     for line in iter(out.readline, b''):
-        print(line)
         queue.put(line)
     out.close()
 
@@ -43,9 +42,7 @@ def get_ip_addresses():
 
 
 def cb_callback(event):
-    print(event)
     iface = v.get()
-    print(iface)
     update_listbox_ipaddr(iface)
     if iface != "":
         start_tcpdump(iface)
@@ -98,7 +95,6 @@ ifaces.insert(0, "")
 v = tk.StringVar()#a string variable to hold user selection
 
 cb = ttk.Combobox(w, textvariable=v, values=ifaces, width=40)
-print(dict(cb))
 cb.grid(column=0, row=1)
 cb.current(0)
 cb.bind("<<ComboboxSelected>>", cb_callback)
@@ -123,7 +119,6 @@ while True:
             line = q.get_nowait()  # or q.get(timeout=.1)
             if line:
                 line = line.rstrip()
-                print("line={}".format(line))
                 m = vlan_re.search(line)
                 update_listbox_vlan(m.group(1))
         except Empty:
