@@ -104,6 +104,8 @@ def start_tcpdump(iface):
     t.daemon = True  # thread dies with the program
     t.start()
 
+
+width=50
 w = tk.Tk()
 w.title('CommunicationZ Scanner')
 
@@ -119,13 +121,13 @@ ifaces.insert(0, "")
 
 v = tk.StringVar()#a string variable to hold user selection
 
-cb = ttk.Combobox(w, textvariable=v, values=ifaces, width=40)
+cb = ttk.Combobox(w, textvariable=v, values=ifaces, width=width)
 cb.grid(column=0, row=1)
 cb.current(0)
 cb.bind("<<ComboboxSelected>>", cb_callback)
 
 update_listbox_ipaddr("")
-listbox = tk.Listbox(w, listvariable = listvar, width=40)
+listbox = tk.Listbox(w, listvariable = listvar, width=width)
 listbox.bind("<<ListboxSelect>>", lb_callback)
 
 
