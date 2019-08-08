@@ -61,9 +61,11 @@ def lb_callback(event):
     w = event.widget
     index = int(w.curselection()[0])
     item = w.get(index)
-    iface = item.split(':')[0]
-    update_listbox_ipaddr(iface)
-    start_tcpdump(iface)
+    p = item.split(':')
+    if len(p) > 1:
+        iface = p[0]
+        update_listbox_ipaddr(iface)
+        start_tcpdump(iface)
 
 
 def update_listbox_vlan(vlan):
