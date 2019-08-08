@@ -1,6 +1,8 @@
 # Zscanner
 Zscanner is a Python app designed to run on a Raspbeery Pi on a small OLED display.
 
+![Zscanner](img/Zscanner.png)
+
 With Zscanner you can:
 * Display all of the IP addresses associated with the network interfaces and the default gateway.
 * When a specific network interface is selected:
