@@ -63,14 +63,16 @@ def b_cb():
 
 def lb_callback(event):
     w = event.widget
-    index = int(w.curselection()[0])
-    item = w.get(index)
-    p = item.split(':')
-    if len(p) > 1:
-        iface = p[0]
-        update_listbox_ipaddr(iface)
-        start_tcpdump(iface)
-        cb.set(iface)
+    sel = w.curselection()
+    if len(sel) > 0:
+        index = int(w.curselection()[0])
+        item = w.get(index)
+        p = item.split(':')
+        if len(p) > 1:
+            iface = p[0]
+            update_listbox_ipaddr(iface)
+            start_tcpdump(iface)
+            cb.set(iface)
 
 
 def update_listbox_vlan(vlan):
@@ -98,6 +100,7 @@ def stop_tcpdump():
     global proc
 
     if proc != None:
+        print('stopping tcpdump')
         proc.kill()
         proc = None
 
@@ -107,6 +110,7 @@ def start_tcpdump(iface):
 
     stop_tcpdump()
 
+    print('starting tcpdump')
     proc = subprocess.Popen(['/usr/sbin/tcpdump', '-n', '-l', '-i', iface, '-e', 'vlan'],
                             stdout=subprocess.PIPE, universal_newlines=True, close_fds=ON_POSIX,
                             bufsize=1,
