@@ -55,6 +55,11 @@ def cb_callback(event):
     if iface != "":
         start_tcpdump(iface)
 
+def b_cb():
+    stop_tcpdump()
+    cb.set("")
+    update_listbox_ipaddr("")
+
 
 def lb_callback(event):
     w = event.widget
@@ -65,6 +70,7 @@ def lb_callback(event):
         iface = p[0]
         update_listbox_ipaddr(iface)
         start_tcpdump(iface)
+        cb.set(iface)
 
 
 def update_listbox_vlan(vlan):
@@ -88,13 +94,18 @@ def update_listbox_ipaddr(interface: str):
 
     listvar.set(listbox_data)
 
+def stop_tcpdump():
+    global proc
+
+    if proc != None:
+        proc.kill()
+        proc = None
 
 def start_tcpdump(iface):
     global proc
     global q
-    if proc != None:
-        proc.kill()
-        proc = None
+
+    stop_tcpdump()
 
     proc = subprocess.Popen(['/usr/sbin/tcpdump', '-n', '-l', '-i', iface, '-e', 'vlan'],
                             stdout=subprocess.PIPE, universal_newlines=True, close_fds=ON_POSIX,
@@ -119,18 +130,24 @@ listvar = tk.StringVar()
 ifaces = netifaces.interfaces()
 ifaces.insert(0, "")
 
+
+b = tk.Button(w, text='Home', command=b_cb)
+b.grid(column=1, row=1)
+
+
 v = tk.StringVar()  # a string variable to hold user selection
 
-cb = ttk.Combobox(w, textvariable=v, values=ifaces, width=width)
+cb = ttk.Combobox(w, textvariable=v, values=ifaces, width=width-15)
 cb.grid(column=0, row=1)
 cb.current(0)
 cb.bind("<<ComboboxSelected>>", cb_callback)
 
+
 update_listbox_ipaddr("")
-listbox = tk.Listbox(w, listvariable=listvar, width=width)
+listbox = tk.Listbox(w, listvariable=listvar,  width=width)
 listbox.bind("<<ListboxSelect>>", lb_callback)
 
-listbox.grid(column=0, row=2)
+listbox.grid(column=0, row=2, columnspan=2)
 # listbox.pack()
 
 # w.mainloop()
